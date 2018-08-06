@@ -7,7 +7,7 @@
     urlRoot: '/orders'
 
   class OrderView extends Backbone.View
-    template: _.template("Order ID: <%= id %>, <span class='amount'><%= amount %></span>")
+    template: _.template("Order ID: <%= id %>, <span class='amount'><%= amount %></span>, <span class='status'><%= status %></span>")
     render: ->
       @$el.html(@template(@model.attributes))
       @
