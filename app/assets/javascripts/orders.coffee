@@ -1,8 +1,4 @@
 @OrderApp = do (Backbone, $, _) ->
-  class PaymentModel extends Backbone.Model
-    initialize: (options) ->
-      @urlRoot = "/orders/#{options.order_id}/payments"
-
   class OrderModel extends Backbone.Model
     urlRoot: '/orders'
 
