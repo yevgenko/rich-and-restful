@@ -1,0 +1,16 @@
+<div class="container">
+  <div id="main-region" class="my-3 p-3 bg-white rounded shadow-sm">
+    <span>Loading...</span>
+  </div>
+</div>
+
+<%= content_for :javascript do -%>
+  <%= javascript_tag do %>
+    $(function() {
+      OrderApp.start({
+        environment: "<%= Rails.env %>",
+        el: '#main-region'
+      });
+    });
+  <% end %>
+<% end -%>
