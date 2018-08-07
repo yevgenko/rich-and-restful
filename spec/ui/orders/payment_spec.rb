@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe "Order Payment Request", type: :feature, js: true do
   let(:app) { page.app }
-  let(:order_page) { OrderPage.new order }
+  let(:order_page) { RichAndRestfulTests::OrderPage.new order }
   let(:order) { Order.create amount: 100 }
   let(:payment) { Payment.new amount: 100 }
 

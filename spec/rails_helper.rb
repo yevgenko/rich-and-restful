@@ -24,7 +24,7 @@ Capybara.javascript_driver = :webkit
 #
 Dir[Rails.root.join('spec', 'support', '**', '*.rb')].each { |f| require f }
 
-Capybara.app = AppWrapper.new(RichAndRestful::Application)
+Capybara.app = RichAndRestfulTests::AppWrapper.new(RichAndRestful::Application)
 
 Capybara::Webkit.configure do |config|
   config.raise_javascript_errors = true

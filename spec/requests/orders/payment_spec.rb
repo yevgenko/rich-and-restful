@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe "POST /orders/:id/payments", type: :request do
-  let(:client) { RestClient.new integration_session }
+  let(:client) { RichAndRestfulTests::RestClient.new integration_session }
 
   it 'creates resource' do
     order = Order.create amount: 100
