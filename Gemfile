@@ -45,6 +45,8 @@ group :development, :test do
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
   gem 'rspec-rails', '~> 3.7'
   gem 'capybara'
+  gem "capybara-webkit"
+  gem 'json_spec'
 end
 
 group :development do
