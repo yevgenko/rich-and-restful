@@ -1,13 +1,10 @@
 module RichAndRestfulTests
   class RestClient
-    include RSpec::Matchers
-    include JsonSpec::Matchers
-
     def initialize(session)
       @session = session
     end
 
-    def create(*resources)
+    def make_request(*resources)
       resource = resources.last
       url = @session.url_for(resources)
       controller_name = Rails.application.routes.recognize_path(url, method: :post)[:controller]
@@ -18,17 +15,14 @@ module RichAndRestfulTests
         locals: { "#{resource_name}": resource }
       )
 
-      params = JSON.parse resource_json
       headers = {
+        "CONTENT_TYPE" => 'application/json',
         "ACCEPT" => "application/json"
       }
 
-      @session.post url, params: params, headers: headers
+      @session.post url, params: resource_json, headers: headers
 
-      # expecting json response, otherwise shows what was that
-      expect { JSON.parse(@session.response.body) }.to_not raise_error, @session.response.body
-
-      expect(@session.response.body).to be_json_eql resource_json
+      resource_json # request body
     end
 
     private
