@@ -21,9 +21,6 @@ RSpec.describe "POST /orders/:id/payments", type: :request do
     controller_name = Rails.application.routes.recognize_path(url, method: :post)[:controller]
     controller = controller_class_for(controller_name).new
     resource_name = resource.class.name.underscore
-    # TODO: talk to action view directly,
-    # or perhaps to respond_with, so, can handle errors as well
-    # resource_json = Rabl::Renderer.json(resource, "#{controller_name}/#{resource_name}")
     resource_json = controller.render_to_string(
       "_#{resource_name}".to_sym,
       locals: { "#{resource_name}": resource }
