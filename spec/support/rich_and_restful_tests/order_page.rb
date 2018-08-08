@@ -2,30 +2,23 @@ module RichAndRestfulTests
   class OrderPage
     include Capybara::DSL
 
-    def initialize(order)
-      @order = order
+    def ensure_on(order)
+      return if current_path == location_for(order)
+
+      visit location_for(order)
     end
 
-    def open
-      visit "#/orders/#{@order.id}"
-      has_status? @order.aasm_state
+    def location_for(order)
+      "#/orders/#{order.id}"
     end
 
-    def make_payment
+    def pay
       within('#main-region') do
         click_on 'Pay'
       end
     end
 
-    def has_status_pending?
-      has_status? 'pending'
-    end
-
-    def has_status_paid?
-      has_status? 'paid'
-    end
-
-    def has_status?(status)
+    def shows_status?(status)
       within('#main-region') do
         assert_text(/#{status}/i)
       end
