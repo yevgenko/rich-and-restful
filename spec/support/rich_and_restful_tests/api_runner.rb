@@ -1,5 +1,5 @@
 module RichAndRestfulTests
-  class RestClient
+  class ApiRunner
     include RSpec::Matchers
     include JsonSpec::Matchers
 
@@ -16,7 +16,7 @@ module RichAndRestfulTests
       )
     end
 
-    def has_received_created_resource?(*models)
+    def has_responded_with_resource_created?(*models)
       resource = resource_for models
       # TODO: why 200?
       # expect(response).to have_http_status(:created)
