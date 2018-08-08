@@ -28,22 +28,18 @@ module RichAndRestfulTests
       @app.call(env)
     end
 
-    def has_received_request?(resources)
-      resource = resources.last
-      controller = last_request.request.controller_class.new
-      controller.request = last_request.request
-
-      resource_name = resource.class.name.underscore
-      resource_json = controller.render_to_string(
-        "_#{resource_name}".to_sym,
-        locals: { "#{resource_name}": resource }
-      )
+    def has_received_post_request?(*models)
+      resource = resource_for models
 
       # expecting json request, otherwise shows what was that
       expect { JSON.parse(last_request.body) }.to_not raise_error, last_request.body
-      expect(last_request.body).to be_json_eql resource_json
-      expect(controller.url_for).to eq controller.url_for(resources)
-      expect(controller.request.request_method_symbol).to eq :post
+      expect(last_request.body).to be_json_eql resource.payload
+      expect(last_request.request.path).to eq resource.location
+      expect(last_request.request.request_method_symbol).to eq :post
+    end
+
+    def resource_for(models)
+      RichAndRestfulTests::Resource.new(models)
     end
   end
 end
