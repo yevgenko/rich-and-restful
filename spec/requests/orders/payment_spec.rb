@@ -12,8 +12,6 @@ RSpec.describe "POST /orders/:id/payments", type: :request do
   end
 
   def a_client
-    open_session do |session|
-      session.extend(RichAndRestfulTests::RestClient)
-    end
+    RichAndRestfulTests::RestClient.new integration_session
   end
 end
