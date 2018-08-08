@@ -2,7 +2,7 @@ module RichAndRestfulTests
   class Resource
     include Rails.application.routes.url_helpers
 
-    def initialize(*models)
+    def initialize(models)
       default_url_options[:only_path] = true
       @models = models
       @model = models.last
