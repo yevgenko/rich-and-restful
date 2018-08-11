@@ -1,45 +1,89 @@
 module RichAndRestfulTests
   class AppWrapper
-    Request = Struct.new :request, :body
+    TestRequest = Struct.new :request, :path, :method, :body
 
-    include RSpec::Matchers
-    include JsonSpec::Matchers
-
-    attr_reader :last_request
-    attr_accessor :catch_requests
+    attr_reader :debug_log
+    attr_accessor :debug
 
     def initialize(app)
-      @catch_requests = false
+      @debug = false
+      @debug_log = []
+      @requests_queues = []
       @app = app
     end
 
     def call(env)
-      if @catch_requests
-        user_request = ActionDispatch::Request.new(env)
+      request = ActionDispatch::Request.new(env)
 
-        @last_request = Request.new(
-          user_request,
-          user_request.body.read
+      if queue = queue_for(request)
+        queue << TestRequest.new(
+          request,
+          request.path,
+          request.request_method_symbol,
+          request.body.read
         )
+        request.body.rewind
+      end
 
-        user_request.body.rewind
+      if debug
+        @debug_log << TestRequest.new(
+          request,
+          request.path,
+          request.request_method_symbol,
+          request.body.read
+        )
+        request.body.rewind
       end
 
       @app.call(env)
     end
 
-    def has_received_post_request?(*models)
-      resource = resource_for models
-
-      # expecting json request, otherwise shows what was that
-      expect { JSON.parse(last_request.body) }.to_not raise_error, last_request.body
-      expect(last_request.body).to be_json_eql resource.payload
-      expect(last_request.request.path).to eq resource.location
-      expect(last_request.request.request_method_symbol).to eq :post
+    def queue_for(request)
+      @requests_queues.detect{ |queue| queue.resource.location == request.path }
     end
 
-    def resource_for(models)
-      RichAndRestfulTests::Resource.new(models)
+    def has_received_post_request?(*models)
+      @requests_queues << SingleRequestQueue.new(models)
+    end
+
+    def verify
+      @requests_queues.each do |queue|
+        queue.has_a_request?
+      end
+    end
+
+    class SingleRequestQueue < SizedQueue
+      include RSpec::Matchers
+      include JsonSpec::Matchers
+
+      def initialize(models)
+        @models = models
+        super(1)
+      end
+
+      def has_a_request?
+        request = request(timeout: 5)
+        # TODO: more descriptive failure, i.e. expected models, but got nothing,
+        expect(request).not_to be_nil, "No request for #{resource.location}"
+
+        # expecting json request, otherwise shows what was that
+        expect { JSON.parse(request.body) }.to_not raise_error, request.body
+        expect(request.body).to be_json_eql resource.payload
+        expect(request.path).to eq resource.location
+        expect(request.method).to eq :post
+      end
+
+      def resource
+        @resource ||= RichAndRestfulTests::Resource.new @models
+      end
+
+      private
+
+      def request(timeout:)
+        request = nil
+        Thread.new { request = pop }.join timeout
+        request
+      end
     end
   end
 end
