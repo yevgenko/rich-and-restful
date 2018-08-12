@@ -50,6 +50,8 @@ module RichAndRestfulTests
       @requests_queues.each do |queue|
         queue.has_a_request?
       end
+
+      @requests_queues.clear
     end
 
     class SingleRequestQueue < SizedQueue
