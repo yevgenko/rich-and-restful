@@ -8,62 +8,55 @@ module RichAndRestfulTests
     def initialize(app)
       @debug = false
       @debug_log = []
-      @requests_queues = []
+      @request_listeners = []
       @app = app
     end
 
     def call(env)
       request = ActionDispatch::Request.new(env)
+      test_request = TestRequest.new(
+        request,
+        request.path,
+        request.request_method_symbol,
+        request.body.read
+      )
+      request.body.rewind
 
-      if queue = queue_for(request)
-        queue << TestRequest.new(
-          request,
-          request.path,
-          request.request_method_symbol,
-          request.body.read
-        )
-        request.body.rewind
+      @request_listeners.each do |listener|
+        listener.process_request test_request
       end
 
-      if debug
-        @debug_log << TestRequest.new(
-          request,
-          request.path,
-          request.request_method_symbol,
-          request.body.read
-        )
-        request.body.rewind
-      end
+      @debug_log << test_request if debug
 
       @app.call(env)
     end
 
-    def queue_for(request)
-      @requests_queues.detect{ |queue| queue.resource.location == request.path }
-    end
-
     def has_received_post_request?(*models)
-      @requests_queues << SingleRequestQueue.new(models)
+      @request_listeners << SingleRequestListener.new(models)
     end
 
     def verify
-      @requests_queues.each do |queue|
-        queue.has_a_request?
+      @request_listeners.each do |listener|
+        listener.receives_request?
       end
 
-      @requests_queues.clear
+      @request_listeners.clear
     end
 
-    class SingleRequestQueue < SizedQueue
+    class SingleRequestListener
       include RSpec::Matchers
       include JsonSpec::Matchers
 
       def initialize(models)
         @models = models
-        super(1)
+        @requests = SizedQueue.new(1)
       end
 
-      def has_a_request?
+      def process_request(request)
+        @requests << request if resource.location == request.path
+      end
+
+      def receives_request?
         request = request(timeout: 5)
         # TODO: more descriptive failure, i.e. expected models, but got nothing,
         expect(request).not_to be_nil, "No request for #{resource.location}"
@@ -83,7 +76,7 @@ module RichAndRestfulTests
 
       def request(timeout:)
         request = nil
-        Thread.new { request = pop }.join timeout
+        Thread.new { request = @requests.pop }.join timeout
         request
       end
     end
